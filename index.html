@@ -274,6 +274,18 @@
     animation: twinkle 1.2s ease-in-out infinite;
   }
   .arena .target:hover { transform: scale(1.3); }
+  .speeds { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin-top: 10px; }
+  .speed-label { font-weight: 800; font-size: 1.15rem; color: var(--pink-700); }
+  .speed {
+    font-family: inherit; font-size: 1rem; font-weight: 700;
+    color: var(--pink-700); background: #fff;
+    border: 3px solid var(--pink-200); border-radius: 999px;
+    padding: 6px 14px; cursor: pointer;
+    transition: transform .2s, background .2s;
+  }
+  .speed:hover { transform: scale(1.08); }
+  .speed.active { background: var(--pink-400); color: #fff; border-color: var(--pink-500); }
+  .speed:disabled { opacity: .6; cursor: not-allowed; transform: none; }
   .score { font-size: 1.4rem; font-weight: 800; color: var(--pink-700); }
 
   footer {
@@ -383,6 +395,13 @@
     <h2><span class="spin">🌟</span> Catch the Stars!</h2>
     <div class="game">
       <p class="score">Score: <span id="score">0</span> &nbsp;|&nbsp; Time: <span id="time">20</span>s</p>
+      <div class="speeds" id="speeds">
+        <span class="speed-label">Speed:</span>
+        <button class="speed" data-spawn="900" data-life="2000">🐢 Slow</button>
+        <button class="speed active" data-spawn="550" data-life="1300">🐰 Normal</button>
+        <button class="speed" data-spawn="380" data-life="850">🚀 Fast</button>
+        <button class="speed" data-spawn="260" data-life="600">⚡ Super Fast</button>
+      </div>
       <div class="arena" id="arena"></div>
       <button class="btn" id="gameBtn">▶ Start Game</button>
     </div>
@@ -535,7 +554,15 @@ document.getElementById('meterBtn').addEventListener('click', () => {
   const scoreEl = document.getElementById('score');
   const timeEl = document.getElementById('time');
   const btn = document.getElementById('gameBtn');
-  let score = 0, time = 20, spawner, clock;
+  const speedBtns = document.querySelectorAll('#speeds .speed');
+  let score = 0, time = 20, spawner, clock, spawnEvery = 550, life = 1300;
+
+  speedBtns.forEach(b => b.addEventListener('click', () => {
+    speedBtns.forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    spawnEvery = +b.dataset.spawn;
+    life = +b.dataset.life;
+  }));
 
   function spawn() {
     const t = document.createElement('span');
@@ -549,20 +576,22 @@ document.getElementById('meterBtn').addEventListener('click', () => {
       t.remove();
     };
     arena.appendChild(t);
-    setTimeout(() => t.remove(), 1300);
+    setTimeout(() => t.remove(), life);
   }
   function end() {
     clearInterval(spawner); clearInterval(clock);
     arena.innerHTML = '<p style="color:#fff;font-size:1.6rem;font-weight:800;padding-top:110px">🎉 You caught ' + score + ' points! 🎉</p>';
     btn.textContent = '🔁 Play Again';
     btn.disabled = false;
+    speedBtns.forEach(x => x.disabled = false);
   }
   btn.onclick = () => {
     score = 0; time = 20;
     scoreEl.textContent = 0; timeEl.textContent = 20;
     arena.innerHTML = '';
     btn.disabled = true;
-    spawner = setInterval(spawn, 550);
+    speedBtns.forEach(x => x.disabled = true);
+    spawner = setInterval(spawn, spawnEvery);
     clock = setInterval(() => { time--; timeEl.textContent = time; if (time <= 0) end(); }, 1000);
   };
 })();
